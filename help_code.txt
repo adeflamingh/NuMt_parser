@@ -1,2 +1,4 @@
 ## this file contains helpful snippets of code for pre and post processing
 
+#to save alignment bam as sam
+samtools view -h -o out.sam in.bam
