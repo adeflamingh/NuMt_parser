@@ -1,0 +1,14 @@
+#filter reads using picard (even easier than pysam):
+
+$  module load  picard/2.10.1-Java-1.8.0_152 
+$ picard FilterSamReads I=Singer_No1_real_12146reads.bam O= Singer1_filtered.bam READ_LIST_FILE=Singer1_MtUnknown.txt FILTER=includeReadList
+
+##Description of tool below - > https://broadinstitute.github.io/picard/command-line-overview.html#FilterSamReads
+
+java -jar picard.jar FilterSamReads \
+       I=input.bam \ 
+       O=output.bam \
+       READ_LIST_FILE=read_names.txt      FILTER=filter_value
+       
+#For information on the SAM format, please see: http://samtools.sourceforge.net
+
