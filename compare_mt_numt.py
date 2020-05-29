@@ -108,6 +108,23 @@ class CIGAR:
                 prev=i+1
         return splitcig
 
+#
+# Create a class to store Alignment Comparisons
+class AlignmentComparison:
+    def __init__(self, read_id, aln_status, alignment_size, num_mismatches):
+        assert aln_status in ['yes', 'no']
+        self.rid = read_id
+        self.status = aln_status
+        self.aln_len = None
+        self.n_mismatch = None
+        self.per_identity = None
+        if self.status == 'yes':
+            self.aln_len = alignment_size
+            self.n_mismatch = num_mismatches
+            self.per_identity = 1 - (self.n_mismatch / self.aln_len)
+    def __str__(self):
+        return f'Read ID: {self.rid}  Alignment Size: {self.aln_len}bp  Number Mismatches: {self.n_mismatch}  % Identity {self.per_identity}'
+
 # ---------
 # Functions
 # ---------
@@ -269,11 +286,11 @@ def compare_alignment(alignment, ref_sequence_dictionary):
     assert type(ref_sequence_dictionary) is dict
     # Finish if alignment is empty
     if alignment is None:
-        return None
+        return AlignmentComparison(None, 'no', None, None)
     # Continue otherwise
     assert isinstance(alignment, ReadAlignment)
     # Output elements
-    read_size  = 0
+    aln_size   = 0
     mismatches = 0
     # Determine reference sequence to use
     ref_sequence = ref_sequence_dictionary.get(alignment.ctg, None)
@@ -281,7 +298,7 @@ def compare_alignment(alignment, ref_sequence_dictionary):
     # Generate elements for comparison
     cigar_list = alignment.cig.per_nt_cigar()
     align_seq = alignment.seq
-    read_size = len(align_seq)
+    aln_size = len(align_seq)
     algn_start = alignment.pos-1
     aln_i = 0 # Index for alignment sequence
     ref_i = 0 # Index for reference sequence
@@ -322,13 +339,11 @@ def compare_alignment(alignment, ref_sequence_dictionary):
             aln_nt = '*'
             ref_nt = '*'
             # If sequence is clipped, increase both counters and reduce length of compared sequence
-            read_size -= 1
+            aln_size -= 1
             aln_i += 1
-        # print(aln_i, ref_i, aln_nt, ref_nt, mismatches)
 
-    # Calculate percent identity
-    per_identify = 1 - (mismatches/read_size)
-    return per_identify
+    # Return AlignmentComparison object
+    return AlignmentComparison(alignment.rid, 'yes', aln_size, mismatches)
 
 #
 # Compare all alignment pair
@@ -358,33 +373,39 @@ def compare_all_alignments(alignment_pair_dictionary, ref_sequence_dictionary):
 # #Read_id<tab>Mt_identity<tab>nuMT_identity<tab>Candidate
 def generate_output_tsv(per_identity_dictionary, output_f):
     out = open(output_f, 'w')
-    out.write('#Read_ID\tMt_identity\tnuMt_identity\tCandidate\n')
+    out.write('#Read_ID\tMt_aln_bp\tMt_mismatch\tMt_identity\tnuMt_aln_bp\tnuMt_mismatch\tnuMt_identity\tCandidate\n')
     # Get current identity pair
     for read in sorted(per_identity_dictionary):
         mt_identity = per_identity_dictionary[read][0]
         numt_identity = per_identity_dictionary[read][1]
         candidate = None
+        mt_perc = None
+        numt_perc = None
+        # Check types
+        assert isinstance(mt_identity, AlignmentComparison)
+        assert isinstance(numt_identity, AlignmentComparison)
         # Check for highest identity
-        if numt_identity is None:
+        if numt_identity.status == 'no':
             candidate = 'Mt'
-            mt_identity = f'{mt_identity:.6f}'
-        elif mt_identity is None:
+            mt_perc = f'{mt_identity.per_identity:.6f}'
+        elif mt_identity.status == 'no':
             candidate = 'nuMt'
-            numt_identity = f'{numt_identity:.6f}'
-        elif mt_identity > numt_identity:
+            numt_perc = f'{numt_identity.per_identity:.6f}'
+        elif mt_identity.per_identity > numt_identity.per_identity:
             candidate = 'Mt'
-            mt_identity = f'{mt_identity:.6f}'
-            numt_identity = f'{numt_identity:.6f}'
-        elif numt_identity > mt_identity:
+            mt_perc = f'{mt_identity.per_identity:.6f}'
+            numt_perc = f'{numt_identity.per_identity:.6f}'
+        elif numt_identity.per_identity > mt_identity.per_identity:
             candidate = 'nuMt'
-            mt_identity = f'{mt_identity:.6f}'
-            numt_identity = f'{numt_identity:.6f}'
-        elif mt_identity == numt_identity:
+            mt_perc = f'{mt_identity.per_identity:.6f}'
+            numt_perc = f'{numt_identity.per_identity:.6f}'
+        elif mt_identity.per_identity == numt_identity.per_identity:
             candidate = 'Unknown'
-            mt_identity = f'{mt_identity:.6f}'
-            numt_identity = f'{numt_identity:.6f}'
+            mt_perc = f'{mt_identity.per_identity:.6f}'
+            numt_perc = f'{numt_identity.per_identity:.6f}'
+
         # Print into file
-        out.write(f'{read}\t{mt_identity}\t{numt_identity}\t{candidate}\n')
+        out.write(f'{read}\t{mt_identity.aln_len}\t{mt_identity.n_mismatch}\t{mt_perc}\t{numt_identity.aln_len}\t{numt_identity.n_mismatch}\t{numt_perc}\t{candidate}\n')
 
 #
 # Main function
