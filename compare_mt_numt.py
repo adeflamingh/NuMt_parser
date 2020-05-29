@@ -12,24 +12,13 @@ from os import path
 
 def parse_args():
     p = argparse.ArgumentParser()
-    p.add_argument('--mt-fasta', required=True, help='Mitochondrial Sequence FASTA')
+    p.add_argument('--mt-fasta',   required=True, help='Mitochondrial Sequence FASTA')
     p.add_argument('--numt-fasta', required=True, help='nuMT Sequence FASTA')
-    p.add_argument('--mt-sam', required=True, help='Read alignments to the Mt reference in SAM format')
-    p.add_argument('--numt-sam', required=True, help='Read alignments to the nuMt reference in SAM format')
-    p.add_argument('--outfile', required=True, help='Path and name to the output TSV file. Example: ./<sample_id>.tsv')
+    p.add_argument('--mt-sam',     required=True, help='Read alignments to the Mt reference in SAM format')
+    p.add_argument('--numt-sam',   required=True, help='Read alignments to the nuMt reference in SAM format')
+    p.add_argument('--outfile',    required=True, help='Path and name to the output TSV file. Example: ./<sample_id>.tsv')
     args = p.parse_args()
     return args
-
-args = parse_args()
-
-# Reference fasta files
-mt_fa = args.mt_fasta
-numt_fa = args.numt_fasta
-# Alignment files
-mt_sam = args.mt_sam
-numt_sam = args.numt_sam
-# Output file
-output_f = args.outfile
 
 # TODO: Make the script work for several samples at a time
 # TODO: Make compatible with BAM files. Check library `pysam`
@@ -350,7 +339,7 @@ def compare_all_alignments(alignment_pair_dictionary, ref_sequence_dictionary):
     # Pre-generate output
     per_identity_dictionary = dict()
     # Loop over read ids in the pair dictionary
-    for read_id in sorted(alignment_pair_dict.keys()):
+    for read_id in sorted(alignment_pair_dictionary.keys()):
         per_identity_dictionary.setdefault(read_id, [ None, None ] )
         # Extract specific alignment pair
         algn_pair = alignment_pair_dictionary[read_id]
@@ -397,16 +386,36 @@ def generate_output_tsv(per_identity_dictionary, output_f):
         # Print into file
         out.write(f'{read}\t{mt_identity}\t{numt_identity}\t{candidate}\n')
 
+#
+# Main function
+def main():
+    # Parse Arguments
+    args = parse_args()
+
+    # Reference fasta files
+    mt_fa = args.mt_fasta
+    numt_fa = args.numt_fasta
+    # Alignment files
+    mt_sam = args.mt_sam
+    numt_sam = args.numt_sam
+    # Output file
+    output_f = args.outfile
+
+    # Run nuMt parser
+
+    # 1. Read MT and nuMT fasta and generate a ref sequence dictionary
+    ref_seq_dict = extract_ref_sequence_dictionary(mt_fa, numt_fa)
+    # 2. Load SAM/BAM into read dictionary
+    alignment_pair_dict = sam_to_alignment_pair(mt_sam, numt_sam)
+    # 3. Compare all alignments against reference sequences
+    per_identity_dictionary = compare_all_alignments(alignment_pair_dict, ref_seq_dict)
+    # 4. Save output
+    generate_output_tsv(per_identity_dictionary, output_f)
+
 
 # --------
 # Run Code
 # --------
 
-# 1. Read MT and nuMT fasta and generate a ref sequence dictionary
-ref_seq_dict = extract_ref_sequence_dictionary(mt_fa, numt_fa)
-# 2. Load SAM/BAM into read dictionary
-alignment_pair_dict = sam_to_alignment_pair(mt_sam, numt_sam)
-# 3. Compare all alignments against reference sequences
-per_identity_dictionary = compare_all_alignments(alignment_pair_dict, ref_seq_dict)
-# 4. Save output
-generate_output_tsv(per_identity_dictionary, output_f)
+if __name__ == '__main__':
+    main()
