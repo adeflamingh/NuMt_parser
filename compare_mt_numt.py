@@ -400,7 +400,7 @@ def generate_output_tsv(per_identity_dictionary, output_f):
             mt_perc = f'{mt_identity.per_identity:.6f}'
             numt_perc = f'{numt_identity.per_identity:.6f}'
         elif mt_identity.per_identity == numt_identity.per_identity:
-            candidate = 'Unknown'
+            candidate = 'Undetermined'
             mt_perc = f'{mt_identity.per_identity:.6f}'
             numt_perc = f'{numt_identity.per_identity:.6f}'
 
