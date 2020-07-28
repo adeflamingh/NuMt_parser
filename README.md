@@ -62,6 +62,7 @@ read_00   80         3            0.962500     80           4              0.950
 Using the resulting output table, raw reads files can be filtered to obtain specific reads originating from either Mt or NuMt templates:
 
 1)Create a "Read ID list" text file with the names of the reads to include or exclude from the dataset 
+    
     E.g. Readlist.txt for the table above with reads originating from Mt:
     read_03
     read_07
