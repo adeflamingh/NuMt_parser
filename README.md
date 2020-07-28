@@ -70,13 +70,13 @@ Using the resulting output table, raw reads files can be filtered to obtain spec
  2)Use the "Read ID list" to filter the original bam alignment file for reads mapping to the Mt Alignment file
     E.g. in Picard (https://github.com/broadinstitute/picard) use the "FilterSamReads" function
    
-   ```sh
+ ```sh
     picard FilterSamReads \
     I=Mt_alignment.bam \
     O=Mt_alignment_filtered.bam \
     READ_LIST_FILE=Readlist.txt \
     FILTER=includeReadList
-    ```
+ ```
  
  3)The resulting output bam file will contain only reads that have been identified by NuMt parser as being of putitive Mt origin.  
  Similar read filtering can be done in the program seqtk (https://github.com/lh3/seqtk)
