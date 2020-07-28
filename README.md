@@ -72,7 +72,7 @@ Using the resulting output table, raw reads files can be filtered to obtain spec
     E.g. in Picard (https://github.com/broadinstitute/picard) use the "FilterSamReads" function
    
  ```sh
-    picard FilterSamReads \
+    java -jar picard.jar FilterSamReads \
     I=Mt_alignment.bam \
     O=Mt_alignment_filtered.bam \
     READ_LIST_FILE=Readlist.txt \
