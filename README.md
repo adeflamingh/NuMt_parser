@@ -16,7 +16,7 @@ Before processing, raw reads must be processed (trimmed to desired length and fi
 
 Reads are then aligned using a short read aligner (such as `bwa` or `bowtie2`) to both a true Mt sequence and a characterized NuMt reference.
 
-Resulting alignments can then be additionally filtered (using tools such as `samtools`, `Picard`, etc.) to removed unmapped reads and low quality alignments. Final filteresd alignments should be saved as `SAM` files for compatibility with `NuMt Parser`.
+Resulting alignments can then be additionally filtered (using tools such as `samtools`, `Picard`, etc.) to removed unmapped reads and low quality alignments. Final filtered alignments should be saved as `SAM` files for compatibility with `NuMt Parser`.
 
 ### NuMt Parser Analysis
 
