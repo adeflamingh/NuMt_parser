@@ -10,7 +10,7 @@ Copyright 2020: Angel G. Rivera-Colon & Alida de Flamingh
 
 ## Usage
 
-### Pre-NuMt Parser
+### Pre-*NuMt Parser*
 
 Before processing, raw reads must be processed (trimmed to desired length and filtering) as desired.
 
@@ -18,7 +18,7 @@ Reads are then aligned using a short read aligner (such as `bwa` or `bowtie2`) t
 
 Resulting alignments can then be additionally filtered (using tools such as `samtools`, `Picard`, etc.) to removed unmapped reads and low quality alignments. Final filtered alignments should be saved as `SAM` files for compatibility with `NuMt Parser`.
 
-### NuMt Parser Analysis
+### *NuMt Parser* Analysis
 
 `NuMt Parser` requires four (4) inputs:
 
@@ -40,7 +40,7 @@ numt_parser.py \
     --outfile /path/to/numt_parser_output.tsv
 ```
 
-### NuMt Parser output
+### *NuMt Parser* output
 
 The output of `NuMt Parser` is a table containing the identity statistics of each processed read.
 
@@ -54,34 +54,38 @@ read_05   67         3            0.955224     67           0              1.000
 read_06   None       None         None         65           0              1.000000       NuMt
 read_07   100        0            1.000000     100          6              0.940000       Mt
 read_08   None       None         None         66           0              1.000000       NuMt
-read_00   80         3            0.962500     80           4              0.950000       Mt
+read_09   80         3            0.962500     80           4              0.950000       Mt
 ```
 
-### Post-NuMt Parser processing
+### Post-*NuMt Parser* processing
 
 Using the resulting output table, raw reads files can be filtered to obtain specific reads originating from either Mt or NuMt templates:
 
-1)Create a "Read ID list" text file with the names of the reads to include or exclude from the dataset 
-    
-    E.g. Readlist.txt for the table above with reads originating from Mt:
-    read_03
-    read_07
-    read_00
- 
- 2)Use the "Read ID list" to filter the original bam alignment file for reads mapping to the Mt Alignment file
-    E.g. in Picard (https://github.com/broadinstitute/picard) use the "FilterSamReads" function
-   
+1. Create a "Read ID list" text file with the names of the reads to include or exclude from the dataset. For example:
+
+```sh
+cat numt_parser_output.tsv | grep -v '^#' | grep 'Mt' | cut -f1 > Readlist.txt
+```
+
+The command above will filter reads tagged as `NuMt` or `Unknown`, retaining those of mitochondrial origin.
+
+```sh
+read_03
+read_07
+read_09
+```
+
+2. Use the "Read ID list" to filter the original BAM alignment file for reads mapping to the Mt Alignment file. E.g. in `Picard` (<https://github.com/broadinstitute/picard>) use the `FilterSamReads` function:
+
  ```sh
-    java -jar picard.jar FilterSamReads \
+java -jar picard.jar FilterSamReads \
     I=Mt_alignment.bam \
     O=Mt_alignment_filtered.bam \
     READ_LIST_FILE=Readlist.txt \
     FILTER=includeReadList
  ```
- 
- 3)The resulting output bam file will contain only reads that have been identified by NuMt parser as being of putitive Mt origin.  
- Similar read filtering can be done in the program seqtk (https://github.com/lh3/seqtk)
- 
+
+3. The resulting output BAM file will contain only reads that have been identified by NuMt parser as being of putitive Mt origin. Similar read filtering can be done in the program `seqtk` (<https://github.com/lh3/seqtk>) or `samtools` (<http://www.htslib.org/doc/samtools.html>).
 
 ## Authors
 
