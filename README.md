@@ -59,7 +59,28 @@ read_00   80         3            0.962500     80           4              0.950
 
 ### Post-NuMt Parser processing
 
-From the resulting output table, raw reads files can be filtered to obtain specific reads originating from either Mt or NuMt templates.
+Using the resulting output table, raw reads files can be filtered to obtain specific reads originating from either Mt or NuMt templates:
+
+1)Create a "Read ID list" text file with the names of the reads to include or exclude from the dataset 
+    E.g. Readlist.txt for the table above with reads originating from Mt:
+    read_03
+    read_07
+    read_00
+ 
+ 2)Use the "Read ID list" to filter the original bam alignment file for reads mapping to the Mt Alignment file
+    E.g. in Picard (https://github.com/broadinstitute/picard) use the "FilterSamReads" function
+   
+   ```sh
+    picard FilterSamReads \
+    I=Mt_alignment.bam \
+    O=Mt_alignment_filtered.bam \
+    READ_LIST_FILE=Readlist.txt \
+    FILTER=includeReadList
+    ```
+ 
+ 3)The resulting output bam file will contain only reads that have been identified by NuMt parser as being of putitive Mt origin.  
+ Similar read filtering can be done in the program seqtk (https://github.com/lh3/seqtk)
+ 
 
 ## Authors
 
