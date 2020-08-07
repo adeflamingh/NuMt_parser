@@ -112,13 +112,13 @@ class CIGAR:
 # Create a class to store Alignment Comparisons
 class AlignmentComparison:
     def __init__(self, read_id, aln_status, alignment_size, num_mismatches):
-        assert aln_status in ['yes', 'no']
+        assert aln_status in [True, False]
         self.rid = read_id
         self.status = aln_status
         self.aln_len = None
         self.n_mismatch = None
         self.per_identity = None
-        if self.status == 'yes':
+        if self.status is True:
             self.aln_len = alignment_size
             self.n_mismatch = num_mismatches
             self.per_identity = 1 - (self.n_mismatch / self.aln_len)
@@ -286,7 +286,7 @@ def compare_alignment(alignment, ref_sequence_dictionary):
     assert type(ref_sequence_dictionary) is dict
     # Finish if alignment is empty
     if alignment is None:
-        return AlignmentComparison(None, 'no', None, None)
+        return AlignmentComparison(None, False, None, None)
     # Continue otherwise
     assert isinstance(alignment, ReadAlignment)
     # Output elements
@@ -343,7 +343,7 @@ def compare_alignment(alignment, ref_sequence_dictionary):
             aln_i += 1
 
     # Return AlignmentComparison object
-    return AlignmentComparison(alignment.rid, 'yes', aln_size, mismatches)
+    return AlignmentComparison(alignment.rid, True, aln_size, mismatches)
 
 #
 # Compare all alignment pair
@@ -385,14 +385,14 @@ def generate_output_tsv(per_identity_dictionary, output_f):
         assert isinstance(mt_identity, AlignmentComparison)
         assert isinstance(numt_identity, AlignmentComparison)
         # Check for highest identity
-        if numt_identity.status == 'no':
-            candidate = 'mt'
+        if numt_identity.status is False:
+            candidate = 'cymt'
             mt_perc = f'{mt_identity.per_identity:.6f}'
-        elif mt_identity.status == 'no':
+        elif mt_identity.status is False:
             candidate = 'numt'
             numt_perc = f'{numt_identity.per_identity:.6f}'
         elif mt_identity.per_identity > numt_identity.per_identity:
-            candidate = 'mt'
+            candidate = 'cymt'
             mt_perc = f'{mt_identity.per_identity:.6f}'
             numt_perc = f'{numt_identity.per_identity:.6f}'
         elif numt_identity.per_identity > mt_identity.per_identity:
@@ -400,7 +400,7 @@ def generate_output_tsv(per_identity_dictionary, output_f):
             mt_perc = f'{mt_identity.per_identity:.6f}'
             numt_perc = f'{numt_identity.per_identity:.6f}'
         elif mt_identity.per_identity == numt_identity.per_identity:
-            candidate = 'Undetermined'
+            candidate = 'undetermined'
             mt_perc = f'{mt_identity.per_identity:.6f}'
             numt_perc = f'{numt_identity.per_identity:.6f}'
 
