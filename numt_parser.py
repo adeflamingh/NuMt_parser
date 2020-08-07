@@ -2,7 +2,7 @@
 import gzip, os.path, argparse
 from os import path
 #
-# Script to compare read similarity to Mitochondrial and Nu-MT sequences
+# Script to compare read similarity to Mitochondrial and numt- sequences
 # (c) 2020 Angel G. Rivera-Colon & Alida de Flamingh
 #
 
@@ -13,9 +13,9 @@ from os import path
 def parse_args():
     p = argparse.ArgumentParser()
     p.add_argument('--mt-fasta',   required=True, help='Mitochondrial Sequence FASTA')
-    p.add_argument('--numt-fasta', required=True, help='NuMt Sequence FASTA')
-    p.add_argument('--mt-sam',     required=True, help='Read alignments to the Mt reference in SAM format')
-    p.add_argument('--numt-sam',   required=True, help='Read alignments to the NuMt reference in SAM format')
+    p.add_argument('--numt-fasta', required=True, help='numt Sequence FASTA')
+    p.add_argument('--mt-sam',     required=True, help='Read alignments to the mt reference in SAM format')
+    p.add_argument('--numt-sam',   required=True, help='Read alignments to the numt reference in SAM format')
     p.add_argument('--outfile',    required=True, help='Path and name to the output TSV file. Example: ./<sample_id>.tsv')
     args = p.parse_args()
     return args
@@ -178,12 +178,12 @@ def read_fasta(fasta_f):
     return fasta_dict
 
 #
-# Function to read both MT and NuMt fasta files and merge into a single final dictionary
+# Function to read both mt and numt fasta files and merge into a single final dictionary
 # { sequence_1 : RefSequence, sequence_2 : RefSequence, ... }
 def extract_ref_sequence_dictionary(mt_fasta, nuMt_fasta):
-    # Read MT fasta
+    # Read mt fasta
     mt_seq_dict = read_fasta(mt_fasta)
-    # Read NuMt fasta
+    # Read numt fasta
     numt_seq_dict = read_fasta(nuMt_fasta)
     # Merge both into a single reference dictionary
     ref_sequence_dictionary = {**mt_seq_dict, **numt_seq_dict}
@@ -244,21 +244,21 @@ def split_cigar_str(cigar):
 
 #
 # Function to generate an Alignment Pair dictionary from alignment list
-# Dictionary will hold the Mt and NuMt alignment for each individual read
+# Dictionary will hold the mt and numt alignment for each individual read
 # { read_1_id : [ mt_ReadAlignment, nuMt_ReadAlignment ], ... }
 def generate_alignment_pair(mt_alignments, numt_alignments):
     # Check inputs
     assert type(mt_alignments) is list
     assert type(numt_alignments) is list
     align_pair_dict = dict()
-    # Process Mt alignments
+    # Process mt alignments
     for alignment in mt_alignments:
         # Check inputs
         assert isinstance(alignment, ReadAlignment)
         # Dictionary default is [ mt_None, numt_None ]
         align_pair_dict.setdefault(alignment.rid, [ None, None ] )
         align_pair_dict[alignment.rid][0] = alignment
-    # Process NuMt alignments
+    # Process numt alignments
     for alignment in numt_alignments:
         # Check inputs
         assert isinstance(alignment, ReadAlignment)
@@ -271,9 +271,9 @@ def generate_alignment_pair(mt_alignments, numt_alignments):
 #
 # Function to process SAMs and generate alignment read pair dictionary
 def sam_to_alignment_pair(mt_sam_f, numt_sam_f):
-    # Process Mt SAM file
+    # Process mt SAM file
     mt_align = read_sam_file(mt_sam_f)
-    # Process NuMt SAM file
+    # Process numt SAM file
     numt_align = read_sam_file(numt_sam_f)
     # Generate alignment read pair
     align_pair_dict = generate_alignment_pair(mt_align, numt_align)
@@ -358,10 +358,10 @@ def compare_all_alignments(alignment_pair_dictionary, ref_sequence_dictionary):
         per_identity_dictionary.setdefault(read_id, [ None, None ] )
         # Extract specific alignment pair
         algn_pair = alignment_pair_dictionary[read_id]
-        # Test Mt alignment
+        # Test mt alignment
         mt_identity = compare_alignment(algn_pair[0], ref_sequence_dictionary)
         per_identity_dictionary[read_id][0] = mt_identity
-        # Test NuMt alignment
+        # Test numt alignment
         numt_identity = compare_alignment(algn_pair[1], ref_sequence_dictionary)
         per_identity_dictionary[read_id][1] = numt_identity
     # Return the populated dictonary
@@ -370,10 +370,10 @@ def compare_all_alignments(alignment_pair_dictionary, ref_sequence_dictionary):
 #
 # Generate output TSV
 # Following format
-# #Read_ID<tab>Mt_aln_bp<tab>Mt_mismatch<tab>Mt_identity<tab>NuMt_aln_bp<tab>NuMt_mismatch<tab>NuMt_identity<tab>Candidate
+# #read_ID<tab>mt_aln_bp<tab>mt_mismatch<tab>mt_identity<tab>numt_aln_bp<tab>numt_mismatch<tab>numt_identity<tab>Candidate
 def generate_output_tsv(per_identity_dictionary, output_f):
     out = open(output_f, 'w')
-    out.write('#Read_ID\tMt_aln_bp\tMt_mismatch\tMt_identity\tNuMt_aln_bp\tNuMt_mismatch\tNuMt_identity\tCandidate\n')
+    out.write('#read_ID\tmt_aln_bp\tmt_mismatch\tmt_identity\tnumt_aln_bp\tnumt_mismatch\tnumt_identity\tcandidate\n')
     # Get current identity pair
     for read in sorted(per_identity_dictionary):
         mt_identity = per_identity_dictionary[read][0]
@@ -386,17 +386,17 @@ def generate_output_tsv(per_identity_dictionary, output_f):
         assert isinstance(numt_identity, AlignmentComparison)
         # Check for highest identity
         if numt_identity.status == 'no':
-            candidate = 'Mt'
+            candidate = 'mt'
             mt_perc = f'{mt_identity.per_identity:.6f}'
         elif mt_identity.status == 'no':
-            candidate = 'NuMt'
+            candidate = 'numt'
             numt_perc = f'{numt_identity.per_identity:.6f}'
         elif mt_identity.per_identity > numt_identity.per_identity:
-            candidate = 'Mt'
+            candidate = 'mt'
             mt_perc = f'{mt_identity.per_identity:.6f}'
             numt_perc = f'{numt_identity.per_identity:.6f}'
         elif numt_identity.per_identity > mt_identity.per_identity:
-            candidate = 'NuMt'
+            candidate = 'numt'
             mt_perc = f'{mt_identity.per_identity:.6f}'
             numt_perc = f'{numt_identity.per_identity:.6f}'
         elif mt_identity.per_identity == numt_identity.per_identity:
@@ -422,9 +422,9 @@ def main():
     # Output file
     output_f = args.outfile
 
-    # Run NuMt parser
+    # Run numt parser
 
-    # 1. Read MT and NuMt fasta and generate a ref sequence dictionary
+    # 1. Read mt and numt fasta and generate a ref sequence dictionary
     ref_seq_dict = extract_ref_sequence_dictionary(mt_fa, numt_fa)
     # 2. Load SAM/BAM into read dictionary
     alignment_pair_dict = sam_to_alignment_pair(mt_sam, numt_sam)
