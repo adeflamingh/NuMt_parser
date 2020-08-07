@@ -64,7 +64,7 @@ Using the resulting output table, raw reads files can be filtered to obtain spec
 1. Create a "Read ID list" text file with the names of the reads to include or exclude from the dataset. For example:
 
 ```sh
-cat numt_parser_output.tsv | grep -v '^#' | grep 'mt' | cut -f1 > Readlist.txt
+cat numt_parser_output.tsv | grep -v '^#' | grep -E -v 'numt|Und' | cut -f1 > Readlist.txt
 ```
 
 The command above will filter reads tagged as `numt` or `Unknown`, retaining those of mitochondrial origin.
