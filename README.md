@@ -1,6 +1,6 @@
-# NuMt Parser
+# numt parser
 
-`NuMt Parser` a software for the detection and filtering of Nuclear Mitochondrial pseudogene (NuMt) contamination in Mitochondrial shotgun sequencing datasets.
+`numt parser` a software for the detection and filtering of Nuclear Mitochondrial pseudogene (numt) contamination in Mitochondrial shotgun sequencing datasets.
 
 Copyright 2020: Angel G. Rivera-Colon & Alida de Flamingh
 
@@ -10,22 +10,22 @@ Copyright 2020: Angel G. Rivera-Colon & Alida de Flamingh
 
 ## Usage
 
-### Pre-*NuMt Parser*
+### Pre-*numt parser*
 
 Before processing, raw reads must be processed (trimmed to desired length and filtering) as desired.
 
-Reads are then aligned using a short read aligner (such as `bwa` or `bowtie2`) to both a true Mt sequence and a characterized NuMt reference.
+Reads are then aligned using a short read aligner (such as `bwa` or `bowtie2`) to both a true mt sequence and a characterized numt reference.
 
-Resulting alignments can then be additionally filtered (using tools such as `samtools`, `Picard`, etc.) to removed unmapped reads and low quality alignments. Final filtered alignments should be saved as `SAM` files for compatibility with `NuMt Parser`.
+Resulting alignments can then be additionally filtered (using tools such as `samtools`, `Picard`, etc.) to removed unmapped reads and low quality alignments. Final filtered alignments should be saved as `SAM` files for compatibility with `numt parser`.
 
-### *NuMt Parser* Analysis
+### *numt parser* Analysis
 
-`NuMt Parser` requires four (4) inputs:
+`numt parser` requires four (4) inputs:
 
-1. Mt Reference file (FASTA)
-2. NuMt Reference file (FASTA)
-3. Mt Alignment file (SAM)
-4. NuMt Alignment file (SAM)
+1. mt Reference file (FASTA)
+2. numt Reference file (FASTA)
+3. mt Alignment file (SAM)
+4. numt Alignment file (SAM)
 
 A fifth parameter naming the location and name of the resulting output table (TSV) is also required.
 
@@ -40,34 +40,34 @@ numt_parser.py \
     --outfile /path/to/numt_parser_output.tsv
 ```
 
-### *NuMt Parser* output
+### *numt parser* output
 
-The output of `NuMt Parser` is a table containing the identity statistics of each processed read.
+The output of `numt parser` is a table containing the identity statistics of each processed read.
 
 ```sh
-#Read_ID  Mt_aln_bp  Mt_mismatch  Mt_identity  NuMt_aln_bp  NuMt_mismatch  NuMt_identity  Candidate
+#read_ID  mt_aln_bp  mt_mismatch  mt_identity  numt_aln_bp  numt_mismatch  numt_identity  candidate
 read_01   100        0            1.000000     100          0              1.000000       Unknown
 read_02   48         0            1.000000     48           0              1.000000       Unknown
-read_03   81         5            0.938272     None         None           None           Mt
-read_04   73         5            0.931507     76           1              0.986842       NuMt
-read_05   67         3            0.955224     67           0              1.000000       NuMt
-read_06   None       None         None         65           0              1.000000       NuMt
-read_07   100        0            1.000000     100          6              0.940000       Mt
-read_08   None       None         None         66           0              1.000000       NuMt
-read_09   80         3            0.962500     80           4              0.950000       Mt
+read_03   81         5            0.938272     None         None           None           mt
+read_04   73         5            0.931507     76           1              0.986842       numt
+read_05   67         3            0.955224     67           0              1.000000       numt
+read_06   None       None         None         65           0              1.000000       numt
+read_07   100        0            1.000000     100          6              0.940000       mt
+read_08   None       None         None         66           0              1.000000       numt
+read_09   80         3            0.962500     80           4              0.950000       mt
 ```
 
-### Post-*NuMt Parser* processing
+### Post-*numt parser* processing
 
-Using the resulting output table, raw reads files can be filtered to obtain specific reads originating from either Mt or NuMt templates:
+Using the resulting output table, raw reads files can be filtered to obtain specific reads originating from either mt or numt templates:
 
 1. Create a "Read ID list" text file with the names of the reads to include or exclude from the dataset. For example:
 
 ```sh
-cat numt_parser_output.tsv | grep -v '^#' | grep 'Mt' | cut -f1 > Readlist.txt
+cat numt_parser_output.tsv | grep -v '^#' | grep 'mt' | cut -f1 > Readlist.txt
 ```
 
-The command above will filter reads tagged as `NuMt` or `Unknown`, retaining those of mitochondrial origin.
+The command above will filter reads tagged as `numt` or `Unknown`, retaining those of mitochondrial origin.
 
 ```sh
 read_03
@@ -75,9 +75,9 @@ read_07
 read_09
 ```
 
-2. Use the "Read ID list" to filter the original BAM alignment file for reads mapping to the Mt Alignment file. E.g. in `Picard` (<https://github.com/broadinstitute/picard>) use the `FilterSamReads` function:
+2. Use the "Read ID list" to filter the original BAM alignment file for reads mapping to the mt Alignment file. E.g. in `Picard` (<https://github.com/broadinstitute/picard>) use the `FilterSamReads` function:
 
- ```sh
+```sh
 java -jar picard.jar FilterSamReads \
     I=Mt_alignment.bam \
     O=Mt_alignment_filtered.bam \
@@ -85,7 +85,7 @@ java -jar picard.jar FilterSamReads \
     FILTER=includeReadList
  ```
 
-3. The resulting output BAM file will contain only reads that have been identified by NuMt parser as being of putitive Mt origin. Similar read filtering can be done in the program `seqtk` (<https://github.com/lh3/seqtk>) or `samtools` (<http://www.htslib.org/doc/samtools.html>).
+3. The resulting output BAM file will contain only reads that have been identified by `numt parser` as being of putitive mt origin. Similar read filtering can be done in the program `seqtk` (<https://github.com/lh3/seqtk>) or `samtools` (<http://www.htslib.org/doc/samtools.html>).
 
 ## Authors
 
