@@ -1,6 +1,6 @@
-# numt parser
+# Numt Parser
 
-`numt parser` a software for the detection and filtering of Nuclear Mitochondrial pseudogene (numt) contamination in Mitochondrial shotgun sequencing datasets.
+`Numt Parser` a software for the detection and filtering of Nuclear Mitochondrial pseudogene (numt) contamination in Mitochondrial shotgun sequencing datasets.
 
 Copyright 2020: Angel G. Rivera-Colon & Alida de Flamingh
 
@@ -10,17 +10,17 @@ Copyright 2020: Angel G. Rivera-Colon & Alida de Flamingh
 
 ## Usage
 
-### Pre-*numt parser*
+### Pre-*Numt Parser*
 
 Before processing, raw reads must be processed (trimmed to desired length and filtering) as desired.
 
 Reads are then aligned using a short read aligner (such as `bwa` or `bowtie2`) to both a true mt sequence and a characterized numt reference.
 
-Resulting alignments can then be additionally filtered (using tools such as `samtools`, `Picard`, etc.) to removed unmapped reads and low quality alignments. Final filtered alignments should be saved as `SAM` files for compatibility with `numt parser`.
+Resulting alignments can then be additionally filtered (using tools such as `samtools`, `Picard`, etc.) to removed unmapped reads and low quality alignments. Final filtered alignments should be saved as `SAM` files for compatibility with `Numt Parser`.
 
-### *numt parser* Analysis
+### *Numt Parser* Analysis
 
-`numt parser` requires four (4) inputs:
+`Numt Parser` requires four (4) inputs:
 
 1. Cytoplasmic mitochondria reference file (FASTA)
 2. numt reference file (FASTA)
@@ -40,9 +40,9 @@ $ numt_parser.py \
     --outfile /path/to/numt_parser_output.tsv
 ```
 
-### *numt parser* output
+### *Numt Parser* output
 
-The output of `numt parser` is a table containing the identity statistics of each processed read.
+The output of `Numt Parser` is a table containing the identity statistics of each processed read.
 
 ```sh
 #read_ID  mt_aln_bp  mt_mismatch  mt_identity  numt_aln_bp  numt_mismatch  numt_identity  candidate
@@ -57,7 +57,7 @@ Read_08   None       None         None         66           0              1.000
 Read_09   80         3            0.962500     80           4              0.950000       cymt
 ```
 
-### Post-*numt parser* processing
+### Post-*Numt Parser* processing
 
 Using the resulting output table, raw reads files can be filtered to obtain specific reads originating from either cytoplasmic mitochondria or numt pseudogene templates:
 
@@ -86,7 +86,7 @@ $ java -jar picard.jar FilterSamReads \
     FILTER=includeReadList
  ```
 
-3. The resulting output BAM file will contain only reads that have been identified by `numt parser` as being of putitive mt origin. Similar read filtering can be done in the program `seqtk` (<https://github.com/lh3/seqtk>) or `samtools` (<http://www.htslib.org/doc/samtools.html>).
+3. The resulting output BAM file will contain only reads that have been identified by `Numt Parser` as being of putitive mt origin. Similar read filtering can be done in the program `seqtk` (<https://github.com/lh3/seqtk>) or `samtools` (<http://www.htslib.org/doc/samtools.html>).
 
 ## Authors
 
