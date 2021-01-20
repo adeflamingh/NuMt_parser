@@ -2,7 +2,7 @@
 import gzip, os.path, argparse, sys
 from os import path
 #
-# Script to compare read similarity to Mitochondrial and numt- sequences
+# Script to compare read similarity to Mitochondrial and numt sequences
 # (c) 2020 Angel G. Rivera-Colon & Alida de Flamingh
 #
 
@@ -18,6 +18,16 @@ def parse_args():
     p.add_argument('--numt-sam',   required=True, help='Read alignments to the numt reference in SAM format')
     p.add_argument('--outfile',    required=True, help='Path and name to the output TSV file. Example: ./<sample_id>.tsv')
     args = p.parse_args()
+
+    if not path.exists(args.numt_fasta):
+        sys.exit(f'Error: `{args.numt_fasta}`: Numt FASTA does not exist.')
+    if not path.exists(args.mt_fasta):
+        sys.exit(f'Error: `{args.mt_fasta}`: Mt FASTA does not exist.')
+    if not path.exists(args.numt_sam):
+        sys.exit(f'Error: `{args.numt_sam}`: Numt SAM does not exist.')
+    if not path.exists(args.mt_sam):
+        sys.exit(f'Error: `{args.mt_sam}`: Mt SAM does not exist.')
+
     return args
 
 # TODO: Make the script work for several samples at a time
