@@ -35,7 +35,7 @@ class RefSequence:
         self.seq = sequence
         self.len = len(self.seq)
     def __str__(self):
-        return '{} : {:,} bp'.format(self.id, self.len)
+        return f'{self.id} : {self.len:,} bp'
 
 #
 # Create a ReadAlignment class
@@ -51,26 +51,33 @@ class ReadAlignment:
         self.sam = sam_flag
         # Determine if reverse complimented
         self.dir = 'forward'
-        if len(f'{self.sam:b}') >= 5:
-            if int(list(f'{self.sam:b}')[-5]) is 1:
-                self.dir = 'reverse'
+        if (self.sam & 16) == 16:
+            self.dir = 'reverse'
         # Determine if read is mapped
         self.map = 'mapped'
-        if len(f'{self.sam:b}') >= 3:
-            if int(list(f'{self.sam:b}')[-3]) is 1:
-                self.map = 'unmapped'
+        if (self.sam & 4) == 4:
+            self.map = 'unmapped'
+        # Determine the ALignment TYpe (aka, if primary, secondary, supplementary)
+        self.alty = 'primary'
+        if (self.sam & 4) == 4:
+            self.alty = 'unmapped'
+        elif (self.sam & 256) == 256:
+            self.alty = 'secondary'
+        elif (self.sam & 2048) == 2048:
+            self.alty = 'supplementary'
         # Process CIGARs
         self.cig = CIGAR(cigar)
     def __str__(self):
-        return '''Read ID: {}
-SAM flag: {}
-Ctg Name: {}
-Align BP: {:,}
-CIGAR: {}
-Seq: {}
-Direction: {}
-Status: {}
-'''.format(self.rid, self.sam, self.ctg, self.pos, self.cig, self.seq, self.dir, self.map)
+        return f'''Read ID: {self.rid}
+SAM flag: {self.sam}
+Ctg Name: {self.ctg}
+Align BP: {self.pos:,}
+CIGAR: {self.cig}
+Seq: {self.seq}
+Direction: {self.dir}
+Status: {self.map}
+Aln Type: {self.alty}
+'''
 
 #
 # CIGAR string class
