@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import gzip, os.path, argparse
+import gzip, os.path, argparse, sys
 from os import path
 #
 # Script to compare read similarity to Mitochondrial and numt- sequences
@@ -319,7 +319,7 @@ def compare_alignment(alignment, ref_sequence_dictionary):
             aln_i += 1
             ref_i += r_dir
         # If deletion
-        if cig is 'D':
+        elif cig is 'D':
             aln_nt = '-'
             ref_nt = ref_sequence.seq[algn_start + ref_i]
             # Count indel as mismatch
@@ -327,20 +327,26 @@ def compare_alignment(alignment, ref_sequence_dictionary):
             # Move along reference
             ref_i += r_dir
         # If insertion
-        if cig is 'I':
+        elif cig is 'I':
             aln_nt = align_seq[aln_i]
             ref_nt = '-'
             # Count indel as mismatch
             mismatches += 1
             # Move along alignment
             aln_i += 1
-        # If clipped
-        if cig in ['S', 'H']:
+        # If soft clipped
+        elif cig is 'S':
             aln_nt = '*'
             ref_nt = '*'
-            # If sequence is clipped, increase both counters and reduce length of compared sequence
+            # If sequence is soft clipped, increase both counters and reduce length of compared sequence
             aln_size -= 1
             aln_i += 1
+        # If hard clipped
+        elif cig is 'H':
+            aln_nt = '*'
+            ref_nt = '*'
+            # When sequences are hard clipped, only the aligned portion of the read is written to the BAM
+            # Thus, DO NOT modify the size of the alignment nor the index
 
     # Return AlignmentComparison object
     return AlignmentComparison(alignment.rid, True, aln_size, mismatches)
