@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
-import gzip, argparse
-from os import path
-from operator import attrgetter
-
+import argparse
+PROG = 'parse_blast_table.py'
 #
 # Script to parse BLAST tabular format and subset reads based on top hits
 #
@@ -11,7 +9,18 @@ from operator import attrgetter
 # Input files
 # -----------
 
-# TODO: parse_args()
+#
+# Command Line Options
+#
+def parse_args():
+    p = argparse.ArgumentParser(prog=PROG)
+    p.add_argument('-b', '--blast-table', required=True, help='BLAST output table.')
+    p.add_argument('-o', '--outfile',     required=True, help='Outfile path.')
+    p.add_argument('-c', '--cymt-id',     required=True, help='Sequenece ID of the CYMT reference.')
+    # Check input
+    args = p.parse_args()
+    assert os.path.exists(args.blast_table)
+    return args
 
 # ------------------------
 # BLAST outfmt 6 structure
@@ -151,15 +160,6 @@ def filter_blast_table(blast_table, outfile, cymt_id_name='KP202262.1_Ref_P_leo'
 # --------
 # Run Code
 # --------
+args = parse_args()
+filter_blast_table(args.blast_table, args.outfile, args.cymt_id)
 
-# For Singer No1
-blast_table = './blast.Singer_No1.cymt_numt_merged.tsv'
-outfile = './Singer_No1.cymt_reads.txt'
-cymt_id_name = 'KP202262.1_Ref_P_leo'
-filter_blast_table(blast_table, outfile, cymt_id_name)
-
-# For Singer No1
-blast_table = './blast.Singer_No2.cymt_numt_merged.tsv'
-outfile = './Singer_No2.cymt_reads.txt'
-cymt_id_name = 'KP202262.1_Ref_P_leo'
-filter_blast_table(blast_table, outfile, cymt_id_name)
