@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
-import argparse
+import argparse, os
 PROG = 'parse_blast_table.py'
+
 #
 # Script to parse BLAST tabular format and subset reads based on top hits
+# (c) 2021 - Angel Rivera-Colon (angelgr2@illinois.edu)
 #
 
 # -----------
@@ -71,7 +73,7 @@ class BlastHit:
 # Return a per-read dictionary of hits
 def parse_blast_table(blast_file):
     # Check input
-    # assert path.exist(blast_file) is True
+    assert os.path.exists(blast_file) is True
     # Create output dictionary
     read_hit_dict = dict()
     # Open file
@@ -162,4 +164,3 @@ def filter_blast_table(blast_table, outfile, cymt_id_name='KP202262.1_Ref_P_leo'
 # --------
 args = parse_args()
 filter_blast_table(args.blast_table, args.outfile, args.cymt_id)
-
