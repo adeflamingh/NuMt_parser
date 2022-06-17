@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import gzip, os.path, argparse, sys
+import gzip, argparse, sys
 from os import path
 #
 # Script to compare read similarity to Mitochondrial and numt sequences
@@ -75,18 +75,31 @@ class ReadAlignment:
             self.alty = 'secondary'
         elif (self.sam & 2048) == 2048:
             self.alty = 'supplementary'
+        # Process Paired information
+        self.paired = False
+        self.read   = 0
+        if (self.sam & 1) == 1:
+            self.paired = True
+            # If the read IS paired, check of read 1 or read 2
+            if (self.sam & 64) == 64:
+                self.read = 1
+            elif (self.sam & 128) == 128:
+                self.read = 2
+        # Get a read-pair specific read ID
+        self.rpid = f'{self.rid}/{self.read}'
         # Process CIGARs
         self.cig = CIGAR(cigar)
     def __str__(self):
-        return f'''Read ID: {self.rid}
-SAM flag: {self.sam}
-Ctg Name: {self.ctg}
-Align BP: {self.pos:,}
-CIGAR: {self.cig}
-Seq: {self.seq}
+        return f'''Read ID:   {self.rid}
+SAM flag:  {self.sam}
+Ctg Name:  {self.ctg}
+Align BP:  {self.pos:,}
+Paired:    {self.paired} (read {self.read})
+CIGAR:     {self.cig}
+Seq:       {self.seq}
 Direction: {self.dir}
-Status: {self.map}
-Aln Type: {self.alty}
+Status:    {self.map}
+Aln Type:  {self.alty}
 '''
 
 #
@@ -273,15 +286,15 @@ def generate_alignment_pair(mt_alignments, numt_alignments):
         # Check inputs
         assert isinstance(alignment, ReadAlignment)
         # Dictionary default is [ mt_None, numt_None ]
-        align_pair_dict.setdefault(alignment.rid, [ None, None ] )
-        align_pair_dict[alignment.rid][0] = alignment
+        align_pair_dict.setdefault(alignment.rpid, [ None, None ] )
+        align_pair_dict[alignment.rpid][0] = alignment
     # Process numt alignments
     for alignment in numt_alignments:
         # Check inputs
         assert isinstance(alignment, ReadAlignment)
         # Dictionary default is [ mt_None, numt_None ]
-        align_pair_dict.setdefault(alignment.rid, [ None, None ] )
-        align_pair_dict[alignment.rid][1] = alignment
+        align_pair_dict.setdefault(alignment.rpid, [ None, None ] )
+        align_pair_dict[alignment.rpid][1] = alignment
     # Return Alignment Pair Dictionary
     return align_pair_dict
 
@@ -366,7 +379,7 @@ def compare_alignment(alignment, ref_sequence_dictionary):
             # Thus, DO NOT modify the size of the alignment nor the index
 
     # Return AlignmentComparison object
-    return AlignmentComparison(alignment.rid, True, aln_size, mismatches)
+    return AlignmentComparison(alignment.rpid, True, aln_size, mismatches)
 
 #
 # Compare all alignment pair
@@ -396,7 +409,7 @@ def compare_all_alignments(alignment_pair_dictionary, ref_sequence_dictionary):
 # #read_ID<tab>mt_aln_bp<tab>mt_mismatch<tab>mt_identity<tab>numt_aln_bp<tab>numt_mismatch<tab>numt_identity<tab>Candidate
 def generate_output_tsv(per_identity_dictionary, output_f):
     out = open(output_f, 'w')
-    out.write('#read_ID\tmt_aln_bp\tmt_mismatch\tmt_identity\tnumt_aln_bp\tnumt_mismatch\tnumt_identity\tcandidate\n')
+    out.write('#read_ID\tread_in_pair\tmt_aln_bp\tmt_mismatch\tmt_identity\tnumt_aln_bp\tnumt_mismatch\tnumt_identity\tcandidate\n')
     # Get current identity pair
     for read in sorted(per_identity_dictionary):
         mt_identity = per_identity_dictionary[read][0]
@@ -426,9 +439,15 @@ def generate_output_tsv(per_identity_dictionary, output_f):
             candidate = 'undetermined'
             mt_perc = f'{mt_identity.per_identity:.6f}'
             numt_perc = f'{numt_identity.per_identity:.6f}'
+        
+        # Process some read information
+        read_id = read[:-2]
+        rp = read[-1:]
+        assert rp.isnumeric(), 'Error: incorrect read paired int'
+        rp = int(rp)
 
         # Print into file
-        out.write(f'{read}\t{mt_identity.aln_len}\t{mt_identity.n_mismatch}\t{mt_perc}\t{numt_identity.aln_len}\t{numt_identity.n_mismatch}\t{numt_perc}\t{candidate}\n')
+        out.write(f'{read_id}\t{rp}\t{mt_identity.aln_len}\t{mt_identity.n_mismatch}\t{mt_perc}\t{numt_identity.aln_len}\t{numt_identity.n_mismatch}\t{numt_perc}\t{candidate}\n')
 
 #
 # Main function
