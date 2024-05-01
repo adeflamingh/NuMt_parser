@@ -1,17 +1,24 @@
 #!/usr/bin/env python3
-import gzip, argparse, sys
+import gzip, argparse, sys, datetime
 from os import path
+
 #
 # Script to compare read similarity to Mitochondrial and numt sequences
 # (c) 2020 Angel G. Rivera-Colon & Alida de Flamingh
 #
+
+DATE = datetime.datetime.now().strftime("%Y%m%d")
+PROG = sys.argv[0].split('/')[-1]
+DESC = 'Parse a set of mitochondrial reads and compare similarity between mitochondrial and NUMT references.'
+ALL_CIGAR_OPS = list('MIDNSHP=X')
+VALID_CIGAR_OPS = list('MDISH')
 
 # -----------
 # Input files
 # -----------
 
 def parse_args():
-    p = argparse.ArgumentParser()
+    p = argparse.ArgumentParser(prog=PROG, description=DESC)
     p.add_argument('--mt-fasta',   required=True, help='Mitochondrial Sequence FASTA')
     p.add_argument('--numt-fasta', required=True, help='numt Sequence FASTA')
     p.add_argument('--mt-sam',     required=True, help='Read alignments to the mt reference in SAM format')
@@ -105,6 +112,7 @@ Aln Type:  {self.alty}
 #
 # CIGAR string class
 class CIGAR:
+    # All "legal" cigar operations: MIDNSHP=X
     def __init__(self, cigar_str):
         self.str = cigar_str
         self.rev_str = ''.join(split_cigar_str(self.str)[::-1])
@@ -122,7 +130,7 @@ class CIGAR:
             # Break down CIGAR elements into type and count
             count = int(cig[:-1])
             ctype = cig[-1]
-            assert ctype in ('M', 'I', 'D', 'S', 'H')
+            assert ctype in VALID_CIGAR_OPS
             nt_cigar_list += [ctype] * count
         return nt_cigar_list
     # Function to split cigar into list; same as `split_cigar_str`, but works automatically with the class.
@@ -133,9 +141,11 @@ class CIGAR:
         splitcig = []
         prev = 0
         for i, c in enumerate(cigar):
-            if c in ('M', 'I', 'D', 'S', 'H'):
+            if c in ALL_CIGAR_OPS:
                 splitcig.append(cigar[prev:i+1])
                 prev=i+1
+                if c not in VALID_CIGAR_OPS:
+                    sys.exit(f"Error: \'{c}\' is not a valid CIGAR opertation. Valid operations are: {','.join(VALID_CIGAR_OPS)}. See README for more info.")
         return splitcig
 
 #
@@ -158,6 +168,11 @@ class AlignmentComparison:
 # ---------
 # Functions
 # ---------
+
+#
+# Print the current date and time.
+def now():
+    return f'{datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")}'
 
 #
 # function to reverse complete sequence. It finds complement and inverts the order
@@ -183,6 +198,7 @@ def read_fasta(fasta_f):
     # Check input file
     assert path.exists(fasta_f) is True
     fasta_dict = dict()
+    total_len = 0
     with gzip.open(fasta_f, 'rt') if fasta_f.endswith('.gz') else open(fasta_f) as f:
         name = None
         seq = []
@@ -195,6 +211,7 @@ def read_fasta(fasta_f):
             if line[0] == '>':
                 if name is not None:
                     fasta_dict[name] = RefSequence(name, ''.join(seq))
+                    total_len += fasta_dict[name].len
                 name = line[1:].split()[0]
                 seq = []
             elif line[0] in ['#', '.']:
@@ -204,6 +221,9 @@ def read_fasta(fasta_f):
                 # if it is sequence
                 seq.append(line.upper())
     fasta_dict[name] = RefSequence(name, ''.join(seq))
+    total_len += fasta_dict[name].len
+    # Print to log:
+    print(f'    Read file: {fasta_f}\n    Composed of {len(fasta_dict):,} sequence(s) with total length of {total_len:,} bp.')
     # Return genome dictionary
     return fasta_dict
 
@@ -212,8 +232,10 @@ def read_fasta(fasta_f):
 # { sequence_1 : RefSequence, sequence_2 : RefSequence, ... }
 def extract_ref_sequence_dictionary(mt_fasta, nuMt_fasta):
     # Read mt fasta
+    print('Reading mitochondrial reference...')
     mt_seq_dict = read_fasta(mt_fasta)
     # Read numt fasta
+    print('\nReading NUMT reference...')
     numt_seq_dict = read_fasta(nuMt_fasta)
     # Merge both into a single reference dictionary
     ref_sequence_dictionary = {**mt_seq_dict, **numt_seq_dict}
@@ -228,6 +250,8 @@ def read_sam_file(sam_f):
     # Check input file
     assert path.exists(sam_f) is True
     align_list = list()
+    total_aln = 0
+    kept_aln = 0
     for line in open(sam_f):
         # Skip headers if they haven't been removed
         if line[0] in ['@', '#']:
@@ -256,9 +280,13 @@ def read_sam_file(sam_f):
         sequence = fields[9]
         # Generate ReadAlignment object
         alignment = ReadAlignment(read_id, sam_flag, ctg_name, pos_bp, cigar, sequence)
+        total_aln += 1
         # Populate Alignment List if read is mapped
-        if alignment.map is 'mapped':
+        if alignment.map == 'mapped':
             align_list.append(alignment)
+            kept_aln += 1
+    # Print to log
+    print(f'    Read file: {sam_f}\n    Parsed {total_aln:,} total alignments.\n    Retained {kept_aln:,} ({(kept_aln/total_aln):.3%}) alignments.')
     # Return the alignment list
     return align_list
 
@@ -267,9 +295,11 @@ def split_cigar_str(cigar):
     splitcig = []
     prev = 0
     for i, c in enumerate(cigar):
-        if c in ('M', 'I', 'D', 'S', 'H'):
+        if c in ALL_CIGAR_OPS:
             splitcig.append(cigar[prev:i+1])
             prev=i+1
+            if c not in VALID_CIGAR_OPS:
+                sys.exit(f"Error: \'{c}\' is not a valid CIGAR opertation. Valid operations are: {','.join(VALID_CIGAR_OPS)}. See README for more info.")
     return splitcig
 
 #
@@ -302,8 +332,10 @@ def generate_alignment_pair(mt_alignments, numt_alignments):
 # Function to process SAMs and generate alignment read pair dictionary
 def sam_to_alignment_pair(mt_sam_f, numt_sam_f):
     # Process mt SAM file
+    print('\nReading mitochondrial alignment SAM...')
     mt_align = read_sam_file(mt_sam_f)
     # Process numt SAM file
+    print('\nReading NUMT alignment SAM...')
     numt_align = read_sam_file(numt_sam_f)
     # Generate alignment read pair
     align_pair_dict = generate_alignment_pair(mt_align, numt_align)
@@ -340,7 +372,7 @@ def compare_alignment(alignment, ref_sequence_dictionary):
         aln_nt = None
         ref_nt = None
         # If match
-        if cig is 'M':
+        if cig == 'M':
             aln_nt = align_seq[aln_i]
             ref_nt = ref_sequence.seq[algn_start + ref_i]
             # Compare the sequences
@@ -349,7 +381,7 @@ def compare_alignment(alignment, ref_sequence_dictionary):
             aln_i += 1
             ref_i += r_dir
         # If deletion
-        elif cig is 'D':
+        elif cig == 'D':
             aln_nt = '-'
             ref_nt = ref_sequence.seq[algn_start + ref_i]
             # Count indel as mismatch
@@ -357,7 +389,7 @@ def compare_alignment(alignment, ref_sequence_dictionary):
             # Move along reference
             ref_i += r_dir
         # If insertion
-        elif cig is 'I':
+        elif cig == 'I':
             aln_nt = align_seq[aln_i]
             ref_nt = '-'
             # Count indel as mismatch
@@ -365,14 +397,14 @@ def compare_alignment(alignment, ref_sequence_dictionary):
             # Move along alignment
             aln_i += 1
         # If soft clipped
-        elif cig is 'S':
+        elif cig == 'S':
             aln_nt = '*'
             ref_nt = '*'
             # If sequence is soft clipped, increase both counters and reduce length of compared sequence
             aln_size -= 1
             aln_i += 1
         # If hard clipped
-        elif cig is 'H':
+        elif cig == 'H':
             aln_nt = '*'
             ref_nt = '*'
             # When sequences are hard clipped, only the aligned portion of the read is written to the BAM
@@ -387,6 +419,8 @@ def compare_alignment(alignment, ref_sequence_dictionary):
 def compare_all_alignments(alignment_pair_dictionary, ref_sequence_dictionary):
     assert type(alignment_pair_dictionary) is dict
     assert type(ref_sequence_dictionary) is dict
+    print('\nComparing alignments...')
+    n_pairs = 0
     # Pre-generate output
     per_identity_dictionary = dict()
     # Loop over read ids in the pair dictionary
@@ -394,12 +428,15 @@ def compare_all_alignments(alignment_pair_dictionary, ref_sequence_dictionary):
         per_identity_dictionary.setdefault(read_id, [ None, None ] )
         # Extract specific alignment pair
         algn_pair = alignment_pair_dictionary[read_id]
+        n_pairs += 1
         # Test mt alignment
         mt_identity = compare_alignment(algn_pair[0], ref_sequence_dictionary)
         per_identity_dictionary[read_id][0] = mt_identity
         # Test numt alignment
         numt_identity = compare_alignment(algn_pair[1], ref_sequence_dictionary)
         per_identity_dictionary[read_id][1] = numt_identity
+    # Print to log
+    print(f'    Compared alignments pairs for {n_pairs:,} reads.')
     # Return the populated dictonary
     return per_identity_dictionary
 
@@ -452,6 +489,7 @@ def generate_output_tsv(per_identity_dictionary, output_f):
 #
 # Main function
 def main():
+    print(f'{PROG} started on {now()}\n')
     # Parse Arguments
     args = parse_args()
 
@@ -474,6 +512,9 @@ def main():
     per_identity_dictionary = compare_all_alignments(alignment_pair_dict, ref_seq_dict)
     # 4. Save output
     generate_output_tsv(per_identity_dictionary, output_f)
+
+    # Finish
+    print(f'\n{PROG} finished on {now()}')
 
 
 # --------
