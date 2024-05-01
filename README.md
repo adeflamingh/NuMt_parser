@@ -12,7 +12,7 @@ Other standard bioinformatic software are required for the processing and alignm
 
 ### General data requirements
 
-*Numt Parser* was designed to work on Illumina short-read sequencing data, most commonly focusing on the shotgun sequencing of mitochondrial genomes. Compatibility with other sequencing applications (e.g., long-read sequencing or RNAseq) has not been tested and thus we cannot guarantee the proper behavior of the software.
+*Numt Parser* was designed to work on Illumina short-read sequencing data, most commonly focusing on the shotgun sequencing of mitochondrial genomes. Compatibility with other sequencing applications (e.g., targeted Sanger sequencing, long-read sequencing, or RNAseq) has not been tested and thus we cannot guarantee the proper behavior of the software.
 
 ### Pre-*Numt Parser*
 
@@ -157,10 +157,10 @@ The Concise Idiosyncratic Gapped Alignment Report (CIGAR) string is a compact re
 Since *Numt Parser* was designed to work on the alignments coming from the mapping of short-read sequencing data, we have limited its function to five CIGAR operations described by the most commonly used short-read aligners (e.g., `bwa`, `bowtie2`, `minimap2`). The five compatible operations are: `M`, `I`, `D`, `S`, and `H`. When *Numt Parser* detects an incompatible operation it will result in an error describing it. For example:
 
 ```sh
-Error: 'P' is not a valid CIGAR opertation. Valid operations are: M,D,I,S,H. See README for more info.
+Error: 'P' in CIGAR 10M3P130M is an incompatible opertation. Compatible CIGAR operations are: M,I,D,S,H. See README for more info.
 ```
 
-This error describes the presence of a `P` or padding operation in a CIGAR string. The `P` operation can be commonly seen in multiple-sequence alignments (and in the alignment to a padded reference, as described in section 3 of the [SAM specification](https://samtools.github.io/hts-specs/SAMv1.pdf)). In regards to *Numt Parser*, observing `P` operations might indicate that, instead of mapping the reads, the user multiple-sequence aligned the reads to genome. Similarly, the `N` operation is commonly used to represent introns in the alignment of RNAseq data and might describe that the user is mapping RNA instead of DNA sequences.
+This error describes the presence of a `P`, or padding operation, in a CIGAR string. The `P` operation can be commonly seen in multiple-sequence alignments (and in the alignment to a padded reference, as described in section 3 of the [SAM specification](https://samtools.github.io/hts-specs/SAMv1.pdf)). In regards to *Numt Parser*, observing `P` operations might indicate that, instead of mapping the reads, the user multiple-sequence aligned the reads to genome. Similarly, the `N` operation is commonly used to represent introns in the alignment of RNAseq data and might describe that the user is mapping RNA instead of DNA sequences.
 
 ## Authors
 
