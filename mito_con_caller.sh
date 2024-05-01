@@ -31,7 +31,8 @@ do
     bedtools genomecov -bga -ibam ${sample}.bam -g lion_ref.fasta | awk '$4 < 3' | bedtools merge -i - > ${sample}.lc_mask.bed
     
     ##CALL VARIANTS:    
-    #The first mpileup part generates genotype likelihoods at each genomic position with coverage. 
+    #The first mpileup part generates genotype likelihoods at each genomic position with coverage. Use the -Ou option when piping 
+    #between bcftools subcommands to speed up performance by removing unnecessary compression/decompression and VCF←→BCF conversion. 
     #The second call part makes the actual calls. 
     #-c switch tells the program to use the consensus/biallelic caller, not the -m multiallelic default calling method
     #do not use -v option (asks to output only variant sites), all sites should be included 
