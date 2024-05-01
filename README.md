@@ -1,24 +1,30 @@
 # Numt Parser
 
-`Numt Parser` a software for the detection and filtering of Nuclear Mitochondrial pseudogene (numt) contamination in Mitochondrial shotgun sequencing datasets.
+*Numt Parser* a software for the detection and filtering of Nuclear Mitochondrial pseudogene (numt) contamination in Mitochondrial shotgun sequencing datasets.
 
-## Installation and Usage Requirements
+## Installation and usage requirements
 
-* Python 3
+* Python >3.7
+
+Other standard bioinformatic software are required for the processing and alignment of short-read sequencing data (e.g., `bwa`, `samtools`, etc.).
 
 ## Usage
 
+### General data requirements
+
+*Numt Parser* was designed to work on Illumina short-read sequencing data, most commonly focusing on the shotgun sequencing of mitochondrial genomes. Compatibility with other sequencing applications (e.g., long-read sequencing or RNAseq) has not been tested and thus we cannot guarantee the proper behavior of the software.
+
 ### Pre-*Numt Parser*
 
-Before filtering, raw reads must be processed (trimmed to desired length and filtering) as desired.
+Before filtering, raw sequencing reads reads must be processed (trimmed to desired length and filtering) as desired.
 
-Reads are then aligned using a short read aligner (such as `bwa` or `bowtie2`) to both a true mt sequence and a characterized numt reference.
+Reads are then mapped using a short read aligner (such as `bwa` or `bowtie2`) to both a true mt sequence and a characterized numt reference.
 
-Resulting alignments can then be additionally filtered (using tools such as `samtools`, `Picard`, etc.) to remove unmapped reads and low quality alignments. Final filtered alignments should be saved as `SAM` files for compatibility with `Numt Parser`.
+Resulting alignments can then be additionally filtered (using tools such as `samtools`, `Picard`, etc.) to remove unmapped reads and low quality alignments. Final filtered alignments should be saved as `SAM` files for compatibility with *Numt Parser*.
 
 ### *Numt Parser* Analysis
 
-`Numt Parser` requires four (4) inputs files:
+The main *Numt Parser* executable, the `numt_parser.py` script, requires four (4) inputs files:
 
 1. Cytoplasmic mitochondria reference file (FASTA)
 2. numt reference file (FASTA)
@@ -27,7 +33,26 @@ Resulting alignments can then be additionally filtered (using tools such as `sam
 
 A fifth parameter specifying the location and name of the resulting output table (TSV) is also required.
 
-#### Usage example
+#### Usage
+
+```sh
+numt_parser.py started on XXXX-XX-XX XX:XX:XX
+
+usage: numt_parser.py [-h] --mt-fasta MT_FASTA --numt-fasta NUMT_FASTA --mt-sam MT_SAM --numt-sam
+                      NUMT_SAM --outfile OUTFILE
+
+Parse a set of mitochondrial reads and compare similarity between mitochondrial and NUMT references.
+
+options:
+  -h, --help                show this help message and exit
+  --mt-fasta MT_FASTA       Mitochondrial Sequence FASTA
+  --numt-fasta NUMT_FASTA   numt Sequence FASTA
+  --mt-sam MT_SAM           Read alignments to the mt reference in SAM format
+  --numt-sam NUMT_SAM       Read alignments to the numt reference in SAM format
+  --outfile OUTFILE         Path and name to the output TSV file. Example: ./<sample_id>.tsv
+```
+
+#### Example
 
 ```sh
 $ numt_parser.py \
@@ -40,7 +65,7 @@ $ numt_parser.py \
 
 ### *Numt Parser* output
 
-The output of `Numt Parser` is a table containing the identity statistics of each processed read.
+The output of `numt_parser.py` is a table containing the identity statistics of each processed read.
 
 ```sh
 #read_ID  read_in_pair  mt_aln_bp  mt_mismatch  mt_identity  numt_aln_bp  numt_mismatch  numt_identity  candidate
@@ -121,7 +146,9 @@ It is imperative to mention that, while we have provided some filtering examples
 
 ## Citing *Numt Parser*
 
-> de Flamingh A, Rivera-Colón AG, Gnoske TP, Kerbis Peterhans JC, Catchen JM, Malhi RS, Roca AL, **Numt Parser: Automated identification and removal of nuclear mitochondrial pseudogenes (numts) for accurate mitochondrial genome reconstruction in Panthera**, *Journal of Heredity*, Volume 114, Issue 2, March 2023, Pages 120–130, <https://doi.org/10.1093/jhered/esac065>
+If you use the *Numt Parser* software for your research, please cite our *JoH* paper:
+
+> de Flamingh A, Rivera-Colón AG, Gnoske TP, Kerbis Peterhans JC, Catchen JM, Malhi RS, Roca AL, ***Numt Parser*: Automated identification and removal of nuclear mitochondrial pseudogenes (numts) for accurate mitochondrial genome reconstruction in Panthera**, *Journal of Heredity*, Volume 114, Issue 2, March 2023, Pages 120–130, <https://doi.org/10.1093/jhered/esac065>
 
 ## On CIGAR strings
 
@@ -135,7 +162,10 @@ Error: 'P' is not a valid CIGAR opertation. Valid operations are: M,D,I,S,H. See
 
 ## Authors
 
-Alida de Flamingh & Angel G. Rivera-Colon
+**Alida de Flamingh**  
+Carl R. Woese Institute for Genomic Biology  
+University of Illinois at Urbana-Champaign 
 
-
+**Angel G. Rivera-Colon**  
+Department of Evolution, Ecology, and Behavior  
 University of Illinos at Urbana-Champaign
