@@ -11,7 +11,7 @@ DATE = datetime.datetime.now().strftime("%Y%m%d")
 PROG = sys.argv[0].split('/')[-1]
 DESC = 'Parse a set of mitochondrial reads and compare similarity between mitochondrial and NUMT references.'
 ALL_CIGAR_OPS = list('MIDNSHP=X')
-VALID_CIGAR_OPS = list('MDISH')
+VALID_CIGAR_OPS = list('MIDSH')
 
 # -----------
 # Input files
@@ -145,7 +145,7 @@ class CIGAR:
                 splitcig.append(cigar[prev:i+1])
                 prev=i+1
                 if c not in VALID_CIGAR_OPS:
-                    sys.exit(f"Error: \'{c}\' is not a valid CIGAR opertation. Valid operations are: {','.join(VALID_CIGAR_OPS)}. See README for more info.")
+                    sys.exit(f"Error: \'{c}\' in CIGAR {cigar} is an incompatible opertation. Compatible CIGAR operations are: {','.join(VALID_CIGAR_OPS)}. See README for more info.")
         return splitcig
 
 #
@@ -299,7 +299,7 @@ def split_cigar_str(cigar):
             splitcig.append(cigar[prev:i+1])
             prev=i+1
             if c not in VALID_CIGAR_OPS:
-                sys.exit(f"Error: \'{c}\' is not a valid CIGAR opertation. Valid operations are: {','.join(VALID_CIGAR_OPS)}. See README for more info.")
+                sys.exit(f"Error: \'{c}\' in CIGAR {cigar} is an incompatible opertation. Compatible CIGAR operations are: {','.join(VALID_CIGAR_OPS)}. See README for more info.")
     return splitcig
 
 #
