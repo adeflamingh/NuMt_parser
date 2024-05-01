@@ -2,8 +2,6 @@
 
 `Numt Parser` a software for the detection and filtering of Nuclear Mitochondrial pseudogene (numt) contamination in Mitochondrial shotgun sequencing datasets.
 
-Copyright 2020: Angel G. Rivera-Colon & Alida de Flamingh
-
 ## Installation and Usage Requirements
 
 * Python 3
@@ -121,8 +119,23 @@ $ java -jar picard.jar FilterSamReads \
 
 It is imperative to mention that, while we have provided some filtering examples in this documentation, it is up to the user to decide a filtering criterion that is more suitable for their data. For example, when filtering paired-end data, users may elect to retain only reads pairs that are for which both reads are listed as having `cymt` origin, as described above. Alternatively, the users may choose to only discard individual reads of `numt` origin regardless of paired status or orientation, e.g., when data/endogenous reads are limited.
 
+## Citing *Numt Parser*
+
+> de Flamingh A, Rivera-Colón AG, Gnoske TP, Kerbis Peterhans JC, Catchen JM, Malhi RS, Roca AL, **Numt Parser: Automated identification and removal of nuclear mitochondrial pseudogenes (numts) for accurate mitochondrial genome reconstruction in Panthera**, *Journal of Heredity*, Volume 114, Issue 2, March 2023, Pages 120–130, <https://doi.org/10.1093/jhered/esac065>
+
+## On CIGAR strings
+
+The Concise Idiosyncratic Gapped Alignment Report (CIGAR) string is a compact representation of an alignment [Li et al. 2009](https://doi.org/10.1093/bioinformatics/btp352).
+
+TODO: Describe the valid operators and problems with the padded alignments:
+
+```sh
+Error: 'P' is not a valid CIGAR opertation. Valid operations are: M,D,I,S,H. See README for more info.
+```
+
 ## Authors
 
 Alida de Flamingh & Angel G. Rivera-Colon
+
 
 University of Illinos at Urbana-Champaign
