@@ -152,13 +152,15 @@ If you use the *Numt Parser* software for your research, please cite our *JoH* p
 
 ## On CIGAR strings
 
-The Concise Idiosyncratic Gapped Alignment Report (CIGAR) string is a compact representation of an alignment [Li et al. 2009](https://doi.org/10.1093/bioinformatics/btp352).
+The Concise Idiosyncratic Gapped Alignment Report (CIGAR) string is a compact representation of an alignment [Li et al. 2009](https://doi.org/10.1093/bioinformatics/btp352). The CIGAR strings describes the status of each base in the alignment in form of several operations. These operations describe if a base in the alignment is "aligned" (i.e., matched, `M`), is part of an indel (`I` or `D` for insertions and deletions, respectively), or of it is clipped (`S` and `H` for soft and hard clips, respectively). Several other CIGAR operations are possible and are described in the [SAM format specification](https://samtools.github.io/hts-specs/SAMv1.pdf).
 
-TODO: Describe the valid operators and problems with the padded alignments:
+Since *Numt Parser* was designed to work on the alignments coming from the mapping of short-read sequencing data, we have limited its function to five CIGAR operations described by the most commonly used short-read aligners (e.g., `bwa`, `bowtie2`, `minimap2`). The five compatible operations are: `M`, `I`, `D`, `S`, and `H`. When *Numt Parser* detects an incompatible operation it will result in an error describing it. For example:
 
 ```sh
 Error: 'P' is not a valid CIGAR opertation. Valid operations are: M,D,I,S,H. See README for more info.
 ```
+
+This error describes the presence of a `P` or padding operation in a CIGAR string. The `P` operation can be commonly seen in multiple-sequence alignments (and in the alignment to a padded reference, as described in section 3 of the [SAM specification](https://samtools.github.io/hts-specs/SAMv1.pdf)). In regards to *Numt Parser*, observing `P` operations might indicate that, instead of mapping the reads, the user multiple-sequence aligned the reads to genome. Similarly, the `N` operation is commonly used to represent introns in the alignment of RNAseq data and might describe that the user is mapping RNA instead of DNA sequences.
 
 ## Authors
 
