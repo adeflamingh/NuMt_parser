@@ -8,6 +8,14 @@
 
 Other standard bioinformatic software are required for the processing and alignment of short-read sequencing data (e.g., `bwa`, `samtools`, etc.).
 
+## Repository organization
+
+This repository contains three directories. 
+
+* `supplementary_files`: contains files associated with the post-processing of Numt Parser files, aDNA extraction protocol, and others.
+* `dev`: contains development version of the software.
+* `bin`: contains the _Numt Parser_ executable (`numt_parser.py`).
+
 ## Usage
 
 ### General data requirements
